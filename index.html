@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кислоты ЕГЭ — тренажёр</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  html, body {
+    background:#0e0e10;
+    color:#fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    height:100%;
+  }
+
+  #app {
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:#0e0e10;
+    display:flex;
+    flex-direction:column;
+    box-shadow:0 0 30px rgba(0,0,0,.7);
+  }
+
+  .screen {
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+    width:100%;
+  }
+
+  /* ---------- Start ---------- */
+  #start-screen {
+    padding:0 24px;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  #start-screen .flask {
+    font-size:96px;
+    line-height:1;
+    margin-bottom:24px;
+    /* простая SVG-колба вместо иконки, чтобы работало без CDN */
+  }
+  #start-screen h1 {
+    font-size:36px;
+    font-weight:700;
+  }
+  #start-screen .spacer-2 { flex:2; }
+  #start-screen .spacer-3 { flex:3; }
+
+  .btn-primary {
+    width:100%;
+    height:56px;
+    background:#22C55E;
+    color:#0E0E10;
+    border:none;
+    border-radius:16px;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+    margin-bottom:32px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-primary:active { background:#1ea84a; }
+
+  /* ---------- Quiz ---------- */
+  #quiz-screen { padding:16px 24px 24px; }
+
+  .appbar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-bottom:8px;
+    margin-bottom:8px;
+  }
+  .appbar .title { font-size:20px; font-weight:600; }
+  .btn-stop {
+    background:transparent;
+    border:none;
+    color:#EF4444;
+    font-size:16px;
+    font-weight:500;
+    padding:8px 12px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  .quiz-body {
+    display:flex;
+    flex-direction:column;
+    flex:1;
+  }
+
+  .question-wrap {
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:120px;
+    padding:16px 0;
+  }
+  .question-name {
+    font-size:32px;
+    font-weight:700;
+    text-align:center;
+    line-height:1.2;
+  }
+
+  .options {
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-bottom:16px;
+  }
+
+  .option {
+    background:#1A1A1E;
+    border:2px solid transparent;
+    border-radius:16px;
+    padding:20px;
+    text-align:center;
+    font-size:20px;
+    font-weight:500;
+    color:#fff;
+    cursor:pointer;
+    user-select:none;
+    transition: background .15s, border-color .15s;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .option.correct {
+    background:rgba(34,197,94,.2);
+    border-color:#22C55E;
+    cursor:default;
+  }
+  .option.wrong {
+    background:rgba(239,68,68,.2);
+    border-color:#EF4444;
+    cursor:default;
+  }
+  .option.disabled { cursor:default; }
+
+  .next-wrap {
+    display:none;
+    justify-content:center;
+    margin-bottom:16px;
+  }
+  .next-wrap.visible { display:flex; }
+
+  .btn-next {
+    background:#22C55E;
+    color:#0E0E10;
+    border:none;
+    border-radius:16px;
+    padding:14px 28px;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ---------- Result ---------- */
+  #result-screen {
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    text-align:center;
+  }
+  #result-screen h1 { font-size:32px; margin-bottom:20px; }
+  #result-screen .right { font-size:24px; color:#22C55E; margin-bottom:8px; }
+  #result-screen .wrong { font-size:24px; color:#EF4444; margin-bottom:40px; }
+  .btn-home {
+    background:#22C55E;
+    color:#0E0E10;
+    border:none;
+    border-radius:16px;
+    padding:14px 40px;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  .hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ============ СТАРТ ============ -->
+  <div id="start-screen" class="screen">
+    <div class="spacer-2"></div>
+    <!-- SVG-колба (вместо иконки) -->
+    <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/>
+      <path d="M7 15h10"/>
+    </svg>
+    <h1>Кислоты ЕГЭ</h1>
+    <div class="spacer-3"></div>
+    <button class="btn-primary" id="btn-start">Начать</button>
+  </div>
+
+  <!-- ============ ТРЕНАЖЁР ============ -->
+  <div id="quiz-screen" class="screen hidden">
+    <div class="appbar">
+      <span class="title">Тренажёр</span>
+      <button class="btn-stop" id="btn-stop">Стоп</button>
+    </div>
+
+    <div class="quiz-body">
+      <div class="question-wrap">
+        <div class="question-name" id="question-name">—</div>
+      </div>
+
+      <div class="options" id="options"></div>
+
+      <div class="next-wrap" id="next-wrap">
+        <button class="btn-next" id="btn-next">Следующий вопрос</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ РЕЗУЛЬТАТ ============ -->
+  <div id="result-screen" class="screen hidden">
+    <h1>Результат</h1>
+    <div class="right" id="res-right">Правильно: 0</div>
+    <div class="wrong" id="res-wrong">Ошибок: 0</div>
+    <button class="btn-home" id="btn-home">На главную</button>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ----- Данные -----
+  var ACIDS = [
+    { formula: 'HCl', name: 'соляная' },
+    { formula: 'HBr', name: 'бромоводородная' },
+    { formula: 'HI', name: 'иодоводородная' },
+    { formula: 'HF', name: 'плавиковая' },
+    { formula: 'H₂S', name: 'сероводородная' },
+    { formula: 'H₂SO₄', name: 'серная' },
+    { formula: 'H₂SO₃', name: 'сернистая' },
+    { formula: 'HNO₃', name: 'азотная' },
+    { formula: 'HNO₂', name: 'азотистая' },
+    { formula: 'H₃PO₄', name: 'фосфорная' },
+    { formula: 'H₂CO₃', name: 'угольная' },
+    { formula: 'H₂SiO₃', name: 'кремниевая' },
+    { formula: 'HBrO', name: 'бромноватистая' },
+    { formula: 'HBrO₂', name: 'бромистая' },
+    { formula: 'HBrO₃', name: 'бромноватая' },
+    { formula: 'HBrO₄', name: 'бромная' },
+    { formula: 'HIO', name: 'иодноватистая' },
+    { formula: 'HIO₂', name: 'иодистая' },
+    { formula: 'HIO₃', name: 'иодноватая' },
+    { formula: 'HIO₄', name: 'иодная' },
+    { formula: 'HClO', name: 'хлорноватистая' },
+    { formula: 'HClO₂', name: 'хлористая' },
+    { formula: 'HClO₃', name: 'хлорноватая' },
+    { formula: 'HClO₄', name: 'хлорная' },
+    { formula: 'HMnO₄', name: 'марганцовая' },
+    { formula: 'H₂MnO₄', name: 'марганцовистая' },
+    { formula: 'H₂CrO₄', name: 'хромовая' },
+    { formula: 'H₂Cr₂O₇', name: 'дихромовая' },
+    { formula: 'HCN', name: 'циановодородная' },
+    { formula: 'HCOOH', name: 'муравьиная' },
+    { formula: 'CH₃COOH', name: 'уксусная' }
+  ];
+
+  // ----- Утилиты -----
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // ----- DOM -----
+  var startScreen  = document.getElementById('start-screen');
+  var quizScreen   = document.getElementById('quiz-screen');
+  var resultScreen = document.getElementById('result-screen');
+
+  var questionName = document.getElementById('question-name');
+  var optionsBox   = document.getElementById('options');
+  var nextWrap     = document.getElementById('next-wrap');
+
+  var resRight = document.getElementById('res-right');
+  var resWrong = document.getElementById('res-wrong');
+
+  // ----- Состояние -----
+  var history     = [];   // последние формулы
+  var target      = null;
+  var selected    = null;
+  var rightCount  = 0;
+  var wrongCount  = 0;
+
+  // ----- Переключение экранов -----
+  function showScreen(id) {
+    startScreen.classList.add('hidden');
+    quizScreen.classList.add('hidden');
+    resultScreen.classList.add('hidden');
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  // ----- Генерация вопроса -----
+  function loadNext() {
+    var available = ACIDS.filter(function(a) {
+      var idx = history.lastIndexOf(a.formula);
+      return idx === -1 || (history.length - idx) > 5;
+    });
+    if (available.length === 0) {
+      available = ACIDS;
+      history = [];
+    }
+
+    target = available[Math.floor(Math.random() * available.length)];
+
+    var others = ACIDS
+      .filter(function(a) { return a.formula !== target.formula; })
+      .map(function(a) { return a.formula; });
+
+    var opts = shuffle([target.formula].concat(shuffle(others).slice(0, 3)));
+
+    history.push(target.formula);
+    if (history.length > 10) history.shift();
+
+    selected = null;
+    questionName.textContent = target.name;
+    nextWrap.classList.remove('visible');
+
+    // Рендер вариантов
+    optionsBox.innerHTML = '';
+    opts.forEach(function(formula) {
+      var div = document.createElement('div');
+      div.className = 'option';
+      div.textContent = formula;
+      div.dataset.formula = formula;
+      div.addEventListener('click', onOptionClick);
+      optionsBox.appendChild(div);
+    });
+  }
+
+  // ----- Клик по варианту -----
+  function onOptionClick(e) {
+    if (selected !== null) return;
+
+    var formula = e.currentTarget.dataset.formula;
+    selected = formula;
+
+    // Блокируем все варианты
+    var allOpts = optionsBox.querySelectorAll('.option');
+    allOpts.forEach(function(el) {
+      el.classList.add('disabled');
+      if (el.dataset.formula === target.formula) {
+        el.classList.add('correct');
+      } else if (el.dataset.formula === formula) {
+        el.classList.add('wrong');
+      }
+    });
+
+    if (formula === target.formula) {
+      rightCount++;
+      setTimeout(function() {
+        loadNext();
+      }, 500);
+    } else {
+      wrongCount++;
+      nextWrap.classList.add('visible');
+    }
+  }
+
+  // ----- Кнопки -----
+  document.getElementById('btn-start').addEventListener('click', function() {
+    rightCount = 0;
+    wrongCount = 0;
+    history = [];
+    showScreen('quiz-screen');
+    loadNext();
+  });
+
+  document.getElementById('btn-next').addEventListener('click', function() {
+    loadNext();
+  });
+
+  document.getElementById('btn-stop').addEventListener('click', function() {
+    resRight.textContent = 'Правильно: ' + rightCount;
+    resWrong.textContent = 'Ошибок: ' + wrongCount;
+    showScreen('result-screen');
+  });
+
+  document.getElementById('btn-home').addEventListener('click', function() {
+    showScreen('start-screen');
+  });
+
+})();
+</script>
+</body>
+</html>
