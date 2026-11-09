@@ -42,7 +42,6 @@
     position:relative;
   }
 
-  /* Кнопка "Справочные материалы" в левом верхнем углу */
   .btn-ref-corner {
     position:absolute;
     top:16px;
@@ -96,7 +95,6 @@
   }
   .btn-secondary:active { background:rgba(34,197,94,.1); }
 
-  /* ---------- Блок с лимитом ---------- */
   .limit-block {
     width:100%;
     background:#1A1A1E;
@@ -340,11 +338,16 @@
     font-weight:600;
   }
 
-  .ref-table-wrap {
+  /* Прокручиваемая область: таблица + текст */
+  .ref-scroll {
     flex:1;
     overflow-y:auto;
+  }
+
+  .ref-table-wrap {
     border-radius:12px;
     border:1px solid #2A2A2E;
+    overflow:hidden;
   }
   .ref-table {
     width:100%;
@@ -380,6 +383,19 @@
   }
   .ref-table tbody td:last-child { color:#ddd; }
 
+  /* Текст под таблицей */
+  .ref-about {
+    margin-top:20px;
+    padding:20px;
+    background:#1A1A1E;
+    border-radius:12px;
+    font-size:14px;
+    line-height:1.6;
+    color:#bbb;
+  }
+  .ref-about p { margin-bottom:12px; }
+  .ref-about p:last-child { margin-bottom:0; }
+
   .hidden { display:none !important; }
 </style>
 </head>
@@ -389,8 +405,6 @@
 
   <!-- ============ СТАРТ ============ -->
   <div id="start-screen" class="screen">
-
-    <!-- Кнопка "Справочные материалы" в левом верхнем углу -->
     <button class="btn-ref-corner" id="btn-ref" title="Справочные материалы">?</button>
 
     <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -427,16 +441,24 @@
       <span class="ref-title">Справочные материалы</span>
     </div>
 
-    <div class="ref-table-wrap">
-      <table class="ref-table">
-        <thead>
-          <tr>
-            <th>Формулы</th>
-            <th>Названия</th>
-          </tr>
-        </thead>
-        <tbody id="ref-tbody"></tbody>
-      </table>
+    <div class="ref-scroll">
+      <div class="ref-table-wrap">
+        <table class="ref-table">
+          <thead>
+            <tr>
+              <th>Формулы</th>
+              <th>Названия</th>
+            </tr>
+          </thead>
+          <tbody id="ref-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="ref-about">
+        <p>Сайт представляет собой интерактивный тренажёр для подготовки к ЕГЭ по химии в разделе «Кислоты». Он предназначен для проверки и закрепления знаний соответствия названий кислот их химическим формулам.</p>
+        <p>Тренажёр предлагает задания с выбором одного правильного ответа из четырёх вариантов и обеспечивает мгновенную проверку результата. Реализованы два режима работы: неограниченный по количеству заданий и с заранее заданным числом вопросов. По завершении тренировки выводится статистика правильных и ошибочных ответов.</p>
+        <p>В приложении также предусмотрен справочный раздел с таблицей формул и названий кислот, доступный для изучения перед началом занятий.</p>
+      </div>
     </div>
   </div>
 
@@ -479,7 +501,6 @@
 (function() {
   'use strict';
 
-  // ----- Данные -----
   var ACIDS = [
     { formula: 'HCl', name: 'соляная' },
     { formula: 'HBr', name: 'бромоводородная' },
@@ -514,7 +535,6 @@
     { formula: 'CH₃COOH', name: 'уксусная' }
   ];
 
-  // ----- Утилиты -----
   function shuffle(arr) {
     var a = arr.slice();
     for (var i = a.length - 1; i > 0; i--) {
@@ -524,7 +544,6 @@
     return a;
   }
 
-  // ----- DOM -----
   var startScreen  = document.getElementById('start-screen');
   var quizScreen   = document.getElementById('quiz-screen');
   var resultScreen = document.getElementById('result-screen');
@@ -547,7 +566,6 @@
 
   var refTbody = document.getElementById('ref-tbody');
 
-  // ----- Заполнение таблицы -----
   (function fillReferenceTable() {
     var rows = ACIDS.map(function(a) {
       return '<tr><td>' + a.formula + '</td><td>' + a.name + '</td></tr>';
@@ -555,7 +573,6 @@
     refTbody.innerHTML = rows;
   })();
 
-  // ----- Состояние -----
   var history      = [];
   var target       = null;
   var selected     = null;
@@ -564,7 +581,6 @@
   var askedCount   = 0;
   var maxQuestions = Infinity;
 
-  // ----- Переключение экранов -----
   function showScreen(id) {
     startScreen.classList.add('hidden');
     quizScreen.classList.add('hidden');
@@ -573,7 +589,6 @@
     document.getElementById(id).classList.remove('hidden');
   }
 
-  // ----- Прогресс -----
   function updateProgress() {
     if (maxQuestions === Infinity) {
       quizCounter.textContent = 'Вопрос ' + (askedCount + 1);
@@ -585,7 +600,6 @@
     }
   }
 
-  // ----- Генерация вопроса -----
   function loadNext() {
     if (askedCount >= maxQuestions) {
       finishQuiz();
@@ -629,7 +643,6 @@
     });
   }
 
-  // ----- Клик по варианту -----
   function onOptionClick(e) {
     if (selected !== null) return;
 
@@ -658,7 +671,6 @@
     }
   }
 
-  // ----- Завершение -----
   function finishQuiz() {
     var total = rightCount + wrongCount;
     var pct = total > 0 ? Math.round((rightCount / total) * 100) : 0;
@@ -671,7 +683,6 @@
     showScreen('result-screen');
   }
 
-  // ----- Запуск -----
   function startGame(limit) {
     maxQuestions = limit;
     rightCount = 0;
@@ -682,7 +693,6 @@
     loadNext();
   }
 
-  // ----- Слайдер -----
   slider.addEventListener('input', function() {
     limitValue.textContent = slider.value;
     quickPicks.forEach(function(b) {
@@ -690,7 +700,6 @@
     });
   });
 
-  // ----- Быстрые кнопки -----
   quickPicks.forEach(function(btn) {
     btn.addEventListener('click', function() {
       var v = parseInt(btn.dataset.value, 10);
@@ -701,7 +710,6 @@
     });
   });
 
-  // ----- Старт -----
   document.getElementById('btn-infinite').addEventListener('click', function() {
     startGame(Infinity);
   });
@@ -710,21 +718,17 @@
     startGame(parseInt(slider.value, 10));
   });
 
-  // ----- Следующий -----
   document.getElementById('btn-next').addEventListener('click', function() {
     askedCount++;
     loadNext();
   });
 
-  // ----- Стоп -----
   document.getElementById('btn-stop').addEventListener('click', finishQuiz);
 
-  // ----- На главную -----
   document.getElementById('btn-home').addEventListener('click', function() {
     showScreen('start-screen');
   });
 
-  // ----- Справочные материалы -----
   document.getElementById('btn-ref').addEventListener('click', function() {
     showScreen('reference-screen');
   });
