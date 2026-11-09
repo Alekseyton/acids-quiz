@@ -42,11 +42,11 @@
     position:relative;
   }
 
-  /* Кнопка "Справочные материалы" в правом верхнем углу */
+  /* Кнопка "Справочные материалы" в левом верхнем углу */
   .btn-ref-corner {
     position:absolute;
     top:16px;
-    right:16px;
+    left:16px;
     width:44px;
     height:44px;
     border-radius:50%;
@@ -66,12 +66,7 @@
   .btn-ref-corner:active { background:rgba(34,197,94,.15); }
 
   #start-screen svg { margin-bottom:24px; }
-  #start-screen h1 { font-size:36px; font-weight:700; margin-bottom:8px; }
-  #start-screen .subtitle {
-    font-size:14px;
-    color:#888;
-    margin-bottom:32px;
-  }
+  #start-screen h1 { font-size:36px; font-weight:700; margin-bottom:32px; }
 
   .btn-primary {
     width:100%;
@@ -316,7 +311,7 @@
     -webkit-tap-highlight-color:transparent;
   }
 
-  /* ---------- Reference (Справочные материалы) ---------- */
+  /* ---------- Reference ---------- */
   #reference-screen {
     padding:16px 24px 24px;
   }
@@ -395,7 +390,7 @@
   <!-- ============ СТАРТ ============ -->
   <div id="start-screen" class="screen">
 
-    <!-- Кнопка "Справочные материалы" в правом верхнем углу -->
+    <!-- Кнопка "Справочные материалы" в левом верхнем углу -->
     <button class="btn-ref-corner" id="btn-ref" title="Справочные материалы">?</button>
 
     <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -403,7 +398,6 @@
       <path d="M7 15h10"/>
     </svg>
     <h1>Кислоты ЕГЭ</h1>
-    <div class="subtitle">Тренажёр по формулам кислот</div>
 
     <button class="btn-secondary" id="btn-infinite" style="margin-bottom:16px;">
       Бесконечный режим
@@ -553,7 +547,7 @@
 
   var refTbody = document.getElementById('ref-tbody');
 
-  // ----- Заполнение таблицы справочных материалов -----
+  // ----- Заполнение таблицы -----
   (function fillReferenceTable() {
     var rows = ACIDS.map(function(a) {
       return '<tr><td>' + a.formula + '</td><td>' + a.name + '</td></tr>';
@@ -730,12 +724,11 @@
     showScreen('start-screen');
   });
 
-  // ----- Справочные материалы: открыть -----
+  // ----- Справочные материалы -----
   document.getElementById('btn-ref').addEventListener('click', function() {
     showScreen('reference-screen');
   });
 
-  // ----- Справочные материалы: назад -----
   document.getElementById('btn-ref-back').addEventListener('click', function() {
     showScreen('start-screen');
   });
