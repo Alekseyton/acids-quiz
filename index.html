@@ -39,7 +39,32 @@
     align-items:center;
     justify-content:center;
     text-align:center;
+    position:relative;
   }
+
+  /* Кнопка "Справочные материалы" в правом верхнем углу */
+  .btn-ref-corner {
+    position:absolute;
+    top:16px;
+    right:16px;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    background:#1A1A1E;
+    color:#22C55E;
+    border:2px solid #22C55E;
+    font-size:20px;
+    font-weight:700;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    line-height:1;
+    padding:0;
+  }
+  .btn-ref-corner:active { background:rgba(34,197,94,.15); }
+
   #start-screen svg { margin-bottom:24px; }
   #start-screen h1 { font-size:36px; font-weight:700; margin-bottom:8px; }
   #start-screen .subtitle {
@@ -103,7 +128,6 @@
     color:#22C55E;
   }
 
-  /* Слайдер */
   input[type=range] {
     -webkit-appearance:none;
     appearance:none;
@@ -292,6 +316,75 @@
     -webkit-tap-highlight-color:transparent;
   }
 
+  /* ---------- Reference (Справочные материалы) ---------- */
+  #reference-screen {
+    padding:16px 24px 24px;
+  }
+  .ref-appbar {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding-bottom:8px;
+    margin-bottom:16px;
+  }
+  .btn-back {
+    background:transparent;
+    border:none;
+    color:#22C55E;
+    font-size:16px;
+    font-weight:500;
+    padding:8px 0;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .ref-appbar .ref-title {
+    font-size:20px;
+    font-weight:600;
+  }
+
+  .ref-table-wrap {
+    flex:1;
+    overflow-y:auto;
+    border-radius:12px;
+    border:1px solid #2A2A2E;
+  }
+  .ref-table {
+    width:100%;
+    border-collapse:collapse;
+    font-size:16px;
+  }
+  .ref-table thead th {
+    position:sticky;
+    top:0;
+    background:#1A1A1E;
+    color:#22C55E;
+    font-size:13px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    padding:14px 16px;
+    text-align:left;
+    border-bottom:2px solid #22C55E;
+    z-index:1;
+  }
+  .ref-table tbody td {
+    padding:12px 16px;
+    border-bottom:1px solid #2A2A2E;
+    vertical-align:middle;
+  }
+  .ref-table tbody tr:last-child td { border-bottom:none; }
+  .ref-table tbody tr:nth-child(even) { background:rgba(255,255,255,.02); }
+  .ref-table tbody td:first-child {
+    font-weight:600;
+    color:#22C55E;
+    white-space:nowrap;
+    font-size:17px;
+  }
+  .ref-table tbody td:last-child { color:#ddd; }
+
   .hidden { display:none !important; }
 </style>
 </head>
@@ -301,7 +394,10 @@
 
   <!-- ============ СТАРТ ============ -->
   <div id="start-screen" class="screen">
-    <!-- SVG-колба -->
+
+    <!-- Кнопка "Справочные материалы" в правом верхнем углу -->
+    <button class="btn-ref-corner" id="btn-ref" title="Справочные материалы">?</button>
+
     <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/>
       <path d="M7 15h10"/>
@@ -309,12 +405,10 @@
     <h1>Кислоты ЕГЭ</h1>
     <div class="subtitle">Тренажёр по формулам кислот</div>
 
-    <!-- Бесконечный режим -->
     <button class="btn-secondary" id="btn-infinite" style="margin-bottom:16px;">
       Бесконечный режим
     </button>
 
-    <!-- Блок с выбором количества -->
     <div class="limit-block">
       <div class="row">
         <span class="label">Количество заданий</span>
@@ -330,6 +424,26 @@
     </div>
 
     <button class="btn-primary" id="btn-start">Начать</button>
+  </div>
+
+  <!-- ============ СПРАВОЧНЫЕ МАТЕРИАЛЫ ============ -->
+  <div id="reference-screen" class="screen hidden">
+    <div class="ref-appbar">
+      <button class="btn-back" id="btn-ref-back">← Назад</button>
+      <span class="ref-title">Справочные материалы</span>
+    </div>
+
+    <div class="ref-table-wrap">
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>Формулы</th>
+            <th>Названия</th>
+          </tr>
+        </thead>
+        <tbody id="ref-tbody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ============ ТРЕНАЖЁР ============ -->
@@ -420,6 +534,7 @@
   var startScreen  = document.getElementById('start-screen');
   var quizScreen   = document.getElementById('quiz-screen');
   var resultScreen = document.getElementById('result-screen');
+  var refScreen    = document.getElementById('reference-screen');
 
   var questionName = document.getElementById('question-name');
   var optionsBox   = document.getElementById('options');
@@ -432,32 +547,43 @@
   var resPercent = document.getElementById('res-percent');
   var resTitle   = document.getElementById('result-title');
 
-  var slider      = document.getElementById('limit-slider');
-  var limitValue  = document.getElementById('limit-value');
-  var quickPicks  = document.querySelectorAll('.quick-pick');
+  var slider     = document.getElementById('limit-slider');
+  var limitValue = document.getElementById('limit-value');
+  var quickPicks = document.querySelectorAll('.quick-pick');
+
+  var refTbody = document.getElementById('ref-tbody');
+
+  // ----- Заполнение таблицы справочных материалов -----
+  (function fillReferenceTable() {
+    var rows = ACIDS.map(function(a) {
+      return '<tr><td>' + a.formula + '</td><td>' + a.name + '</td></tr>';
+    }).join('');
+    refTbody.innerHTML = rows;
+  })();
 
   // ----- Состояние -----
-  var history     = [];
-  var target      = null;
-  var selected    = null;
-  var rightCount  = 0;
-  var wrongCount  = 0;
-  var askedCount  = 0;       // сколько вопросов уже задано
-  var maxQuestions = Infinity; // лимит (Infinity = бесконечно)
+  var history      = [];
+  var target       = null;
+  var selected     = null;
+  var rightCount   = 0;
+  var wrongCount   = 0;
+  var askedCount   = 0;
+  var maxQuestions = Infinity;
 
   // ----- Переключение экранов -----
   function showScreen(id) {
     startScreen.classList.add('hidden');
     quizScreen.classList.add('hidden');
     resultScreen.classList.add('hidden');
+    refScreen.classList.add('hidden');
     document.getElementById(id).classList.remove('hidden');
   }
 
-  // ----- Обновление прогресса / счётчика -----
+  // ----- Прогресс -----
   function updateProgress() {
     if (maxQuestions === Infinity) {
       quizCounter.textContent = 'Вопрос ' + (askedCount + 1);
-      progressFill.style.width = '0%'; // для бесконечного прогресса нет
+      progressFill.style.width = '0%';
     } else {
       quizCounter.textContent = 'Вопрос ' + (askedCount + 1) + ' / ' + maxQuestions;
       var pct = maxQuestions > 0 ? (askedCount / maxQuestions) * 100 : 0;
@@ -467,7 +593,6 @@
 
   // ----- Генерация вопроса -----
   function loadNext() {
-    // Проверка лимита — если достигнут, завершаем
     if (askedCount >= maxQuestions) {
       finishQuiz();
       return;
@@ -539,7 +664,7 @@
     }
   }
 
-  // ----- Завершение игры -----
+  // ----- Завершение -----
   function finishQuiz() {
     var total = rightCount + wrongCount;
     var pct = total > 0 ? Math.round((rightCount / total) * 100) : 0;
@@ -552,7 +677,7 @@
     showScreen('result-screen');
   }
 
-  // ----- Запуск игры -----
+  // ----- Запуск -----
   function startGame(limit) {
     maxQuestions = limit;
     rightCount = 0;
@@ -582,17 +707,16 @@
     });
   });
 
-  // ----- Кнопки старта -----
+  // ----- Старт -----
   document.getElementById('btn-infinite').addEventListener('click', function() {
     startGame(Infinity);
   });
 
   document.getElementById('btn-start').addEventListener('click', function() {
-    var n = parseInt(slider.value, 10);
-    startGame(n);
+    startGame(parseInt(slider.value, 10));
   });
 
-  // ----- Кнопка «Следующий вопрос» -----
+  // ----- Следующий -----
   document.getElementById('btn-next').addEventListener('click', function() {
     askedCount++;
     loadNext();
@@ -603,6 +727,16 @@
 
   // ----- На главную -----
   document.getElementById('btn-home').addEventListener('click', function() {
+    showScreen('start-screen');
+  });
+
+  // ----- Справочные материалы: открыть -----
+  document.getElementById('btn-ref').addEventListener('click', function() {
+    showScreen('reference-screen');
+  });
+
+  // ----- Справочные материалы: назад -----
+  document.getElementById('btn-ref-back').addEventListener('click', function() {
     showScreen('start-screen');
   });
 
