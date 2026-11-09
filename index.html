@@ -40,18 +40,13 @@
     justify-content:center;
     text-align:center;
   }
-  #start-screen .flask {
-    font-size:96px;
-    line-height:1;
-    margin-bottom:24px;
-    /* простая SVG-колба вместо иконки, чтобы работало без CDN */
+  #start-screen svg { margin-bottom:24px; }
+  #start-screen h1 { font-size:36px; font-weight:700; margin-bottom:8px; }
+  #start-screen .subtitle {
+    font-size:14px;
+    color:#888;
+    margin-bottom:32px;
   }
-  #start-screen h1 {
-    font-size:36px;
-    font-weight:700;
-  }
-  #start-screen .spacer-2 { flex:2; }
-  #start-screen .spacer-3 { flex:3; }
 
   .btn-primary {
     width:100%;
@@ -63,10 +58,104 @@
     font-size:18px;
     font-weight:600;
     cursor:pointer;
-    margin-bottom:32px;
     -webkit-tap-highlight-color:transparent;
   }
   .btn-primary:active { background:#1ea84a; }
+
+  .btn-secondary {
+    width:100%;
+    height:56px;
+    background:transparent;
+    color:#22C55E;
+    border:2px solid #22C55E;
+    border-radius:16px;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .btn-secondary:active { background:rgba(34,197,94,.1); }
+
+  /* ---------- Блок с лимитом ---------- */
+  .limit-block {
+    width:100%;
+    background:#1A1A1E;
+    border-radius:16px;
+    padding:20px;
+    margin-top:16px;
+    margin-bottom:16px;
+  }
+  .limit-block .row {
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:12px;
+  }
+  .limit-block .label {
+    font-size:14px;
+    color:#888;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+  }
+  .limit-block .value {
+    font-size:28px;
+    font-weight:700;
+    color:#22C55E;
+  }
+
+  /* Слайдер */
+  input[type=range] {
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    height:6px;
+    background:#2A2A2E;
+    border-radius:3px;
+    outline:none;
+    margin-bottom:16px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none;
+    appearance:none;
+    width:24px;
+    height:24px;
+    background:#22C55E;
+    border-radius:50%;
+    cursor:pointer;
+    border:3px solid #0e0e10;
+    box-shadow:0 0 0 2px #22C55E;
+  }
+  input[type=range]::-moz-range-thumb {
+    width:24px;
+    height:24px;
+    background:#22C55E;
+    border-radius:50%;
+    cursor:pointer;
+    border:3px solid #0e0e10;
+    box-shadow:0 0 0 2px #22C55E;
+  }
+
+  .quick-picks {
+    display:flex;
+    gap:8px;
+    margin-bottom:4px;
+  }
+  .quick-pick {
+    flex:1;
+    background:#2A2A2E;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:8px 0;
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .quick-pick.active {
+    background:#22C55E;
+    color:#0E0E10;
+  }
 
   /* ---------- Quiz ---------- */
   #quiz-screen { padding:16px 24px 24px; }
@@ -88,6 +177,19 @@
     padding:8px 12px;
     cursor:pointer;
     -webkit-tap-highlight-color:transparent;
+  }
+
+  .progress-line {
+    height:4px;
+    background:#1A1A1E;
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:8px;
+  }
+  .progress-fill {
+    height:100%;
+    background:#22C55E;
+    transition: width .3s;
   }
 
   .quiz-body {
@@ -172,7 +274,12 @@
   }
   #result-screen h1 { font-size:32px; margin-bottom:20px; }
   #result-screen .right { font-size:24px; color:#22C55E; margin-bottom:8px; }
-  #result-screen .wrong { font-size:24px; color:#EF4444; margin-bottom:40px; }
+  #result-screen .wrong { font-size:24px; color:#EF4444; margin-bottom:8px; }
+  #result-screen .percent {
+    font-size:18px;
+    color:#888;
+    margin-bottom:40px;
+  }
   .btn-home {
     background:#22C55E;
     color:#0E0E10;
@@ -194,22 +301,46 @@
 
   <!-- ============ СТАРТ ============ -->
   <div id="start-screen" class="screen">
-    <div class="spacer-2"></div>
-    <!-- SVG-колба (вместо иконки) -->
+    <!-- SVG-колба -->
     <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/>
       <path d="M7 15h10"/>
     </svg>
     <h1>Кислоты ЕГЭ</h1>
-    <div class="spacer-3"></div>
+    <div class="subtitle">Тренажёр по формулам кислот</div>
+
+    <!-- Бесконечный режим -->
+    <button class="btn-secondary" id="btn-infinite" style="margin-bottom:16px;">
+      Бесконечный режим
+    </button>
+
+    <!-- Блок с выбором количества -->
+    <div class="limit-block">
+      <div class="row">
+        <span class="label">Количество заданий</span>
+        <span class="value" id="limit-value">10</span>
+      </div>
+      <input type="range" id="limit-slider" min="1" max="100" value="10" step="1">
+      <div class="quick-picks">
+        <button class="quick-pick" data-value="5">5</button>
+        <button class="quick-pick active" data-value="10">10</button>
+        <button class="quick-pick" data-value="20">20</button>
+        <button class="quick-pick" data-value="50">50</button>
+      </div>
+    </div>
+
     <button class="btn-primary" id="btn-start">Начать</button>
   </div>
 
   <!-- ============ ТРЕНАЖЁР ============ -->
   <div id="quiz-screen" class="screen hidden">
     <div class="appbar">
-      <span class="title">Тренажёр</span>
+      <span class="title" id="quiz-counter">Вопрос 1</span>
       <button class="btn-stop" id="btn-stop">Стоп</button>
+    </div>
+
+    <div class="progress-line">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
     </div>
 
     <div class="quiz-body">
@@ -227,9 +358,10 @@
 
   <!-- ============ РЕЗУЛЬТАТ ============ -->
   <div id="result-screen" class="screen hidden">
-    <h1>Результат</h1>
+    <h1 id="result-title">Результат</h1>
     <div class="right" id="res-right">Правильно: 0</div>
     <div class="wrong" id="res-wrong">Ошибок: 0</div>
+    <div class="percent" id="res-percent"></div>
     <button class="btn-home" id="btn-home">На главную</button>
   </div>
 
@@ -292,16 +424,26 @@
   var questionName = document.getElementById('question-name');
   var optionsBox   = document.getElementById('options');
   var nextWrap     = document.getElementById('next-wrap');
+  var quizCounter  = document.getElementById('quiz-counter');
+  var progressFill = document.getElementById('progress-fill');
 
-  var resRight = document.getElementById('res-right');
-  var resWrong = document.getElementById('res-wrong');
+  var resRight   = document.getElementById('res-right');
+  var resWrong   = document.getElementById('res-wrong');
+  var resPercent = document.getElementById('res-percent');
+  var resTitle   = document.getElementById('result-title');
+
+  var slider      = document.getElementById('limit-slider');
+  var limitValue  = document.getElementById('limit-value');
+  var quickPicks  = document.querySelectorAll('.quick-pick');
 
   // ----- Состояние -----
-  var history     = [];   // последние формулы
+  var history     = [];
   var target      = null;
   var selected    = null;
   var rightCount  = 0;
   var wrongCount  = 0;
+  var askedCount  = 0;       // сколько вопросов уже задано
+  var maxQuestions = Infinity; // лимит (Infinity = бесконечно)
 
   // ----- Переключение экранов -----
   function showScreen(id) {
@@ -311,8 +453,26 @@
     document.getElementById(id).classList.remove('hidden');
   }
 
+  // ----- Обновление прогресса / счётчика -----
+  function updateProgress() {
+    if (maxQuestions === Infinity) {
+      quizCounter.textContent = 'Вопрос ' + (askedCount + 1);
+      progressFill.style.width = '0%'; // для бесконечного прогресса нет
+    } else {
+      quizCounter.textContent = 'Вопрос ' + (askedCount + 1) + ' / ' + maxQuestions;
+      var pct = maxQuestions > 0 ? (askedCount / maxQuestions) * 100 : 0;
+      progressFill.style.width = pct + '%';
+    }
+  }
+
   // ----- Генерация вопроса -----
   function loadNext() {
+    // Проверка лимита — если достигнут, завершаем
+    if (askedCount >= maxQuestions) {
+      finishQuiz();
+      return;
+    }
+
     var available = ACIDS.filter(function(a) {
       var idx = history.lastIndexOf(a.formula);
       return idx === -1 || (history.length - idx) > 5;
@@ -337,7 +497,8 @@
     questionName.textContent = target.name;
     nextWrap.classList.remove('visible');
 
-    // Рендер вариантов
+    updateProgress();
+
     optionsBox.innerHTML = '';
     opts.forEach(function(formula) {
       var div = document.createElement('div');
@@ -356,7 +517,6 @@
     var formula = e.currentTarget.dataset.formula;
     selected = formula;
 
-    // Блокируем все варианты
     var allOpts = optionsBox.querySelectorAll('.option');
     allOpts.forEach(function(el) {
       el.classList.add('disabled');
@@ -370,6 +530,7 @@
     if (formula === target.formula) {
       rightCount++;
       setTimeout(function() {
+        askedCount++;
         loadNext();
       }, 500);
     } else {
@@ -378,25 +539,69 @@
     }
   }
 
-  // ----- Кнопки -----
-  document.getElementById('btn-start').addEventListener('click', function() {
+  // ----- Завершение игры -----
+  function finishQuiz() {
+    var total = rightCount + wrongCount;
+    var pct = total > 0 ? Math.round((rightCount / total) * 100) : 0;
+
+    resTitle.textContent = (maxQuestions === Infinity) ? 'Результат' : 'Тренировка завершена';
+    resRight.textContent = 'Правильно: ' + rightCount;
+    resWrong.textContent = 'Ошибок: ' + wrongCount;
+    resPercent.textContent = total > 0 ? 'Точность: ' + pct + '%' : '';
+
+    showScreen('result-screen');
+  }
+
+  // ----- Запуск игры -----
+  function startGame(limit) {
+    maxQuestions = limit;
     rightCount = 0;
     wrongCount = 0;
+    askedCount = 0;
     history = [];
     showScreen('quiz-screen');
     loadNext();
+  }
+
+  // ----- Слайдер -----
+  slider.addEventListener('input', function() {
+    limitValue.textContent = slider.value;
+    quickPicks.forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.dataset.value, 10) === parseInt(slider.value, 10));
+    });
   });
 
+  // ----- Быстрые кнопки -----
+  quickPicks.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var v = parseInt(btn.dataset.value, 10);
+      slider.value = v;
+      limitValue.textContent = v;
+      quickPicks.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+    });
+  });
+
+  // ----- Кнопки старта -----
+  document.getElementById('btn-infinite').addEventListener('click', function() {
+    startGame(Infinity);
+  });
+
+  document.getElementById('btn-start').addEventListener('click', function() {
+    var n = parseInt(slider.value, 10);
+    startGame(n);
+  });
+
+  // ----- Кнопка «Следующий вопрос» -----
   document.getElementById('btn-next').addEventListener('click', function() {
+    askedCount++;
     loadNext();
   });
 
-  document.getElementById('btn-stop').addEventListener('click', function() {
-    resRight.textContent = 'Правильно: ' + rightCount;
-    resWrong.textContent = 'Ошибок: ' + wrongCount;
-    showScreen('result-screen');
-  });
+  // ----- Стоп -----
+  document.getElementById('btn-stop').addEventListener('click', finishQuiz);
 
+  // ----- На главную -----
   document.getElementById('btn-home').addEventListener('click', function() {
     showScreen('start-screen');
   });
