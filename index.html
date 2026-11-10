@@ -64,10 +64,37 @@
   }
   .btn-ref-corner:active { background:rgba(34,197,94,.15); }
 
+  /* Переключатель режима в правом верхнем углу */
+  .mode-switch {
+    position:absolute;
+    top:16px;
+    right:16px;
+    display:flex;
+    background:#1A1A1E;
+    border-radius:12px;
+    padding:4px;
+    gap:4px;
+  }
+  .mode-switch button {
+    background:transparent;
+    border:none;
+    color:#888;
+    font-size:13px;
+    font-weight:600;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+    transition: background .15s, color .15s;
+  }
+  .mode-switch button.active {
+    background:#22C55E;
+    color:#0E0E10;
+  }
+
   #start-screen svg { margin-top:64px; margin-bottom:24px; }
   #start-screen h1 { font-size:36px; font-weight:700; margin-bottom:0; }
 
-  /* Обёртка для кнопок и слайдера — опускаем вниз */
   .start-controls {
     width:100%;
     margin-top:auto;
@@ -76,7 +103,6 @@
     flex-direction:column;
   }
 
-  /* Версия внизу главного экрана */
   .version-label {
     position:absolute;
     bottom:4px;
@@ -241,6 +267,7 @@
   .question-wrap {
     flex:1;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
     min-height:120px;
@@ -252,6 +279,21 @@
     text-align:center;
     line-height:1.2;
   }
+
+  /* Описание кислоты (только в режиме новичка) */
+  .question-desc {
+    display:none;
+    font-size:14px;
+    line-height:1.5;
+    color:#aaa;
+    text-align:center;
+    margin-top:14px;
+    padding:12px 16px;
+    background:#1A1A1E;
+    border-radius:12px;
+    max-width:100%;
+  }
+  .question-desc.visible { display:block; }
 
   .options {
     display:flex;
@@ -428,6 +470,12 @@
   <div id="start-screen" class="screen">
     <button class="btn-ref-corner" id="btn-ref" title="Справочные материалы">?</button>
 
+    <!-- Переключатель режима -->
+    <div class="mode-switch">
+      <button id="mode-novice">Новичок</button>
+      <button id="mode-pro" class="active">Профи</button>
+    </div>
+
     <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#22C55E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/>
       <path d="M7 15h10"/>
@@ -456,7 +504,7 @@
       <button class="btn-primary" id="btn-start">Начать</button>
     </div>
 
-    <div class="version-label">v beta 0.1.3</div>
+    <div class="version-label">v beta 0.1.5</div>
   </div>
 
   <!-- ============ СПРАВОЧНЫЕ МАТЕРИАЛЫ ============ -->
@@ -501,6 +549,7 @@
     <div class="quiz-body">
       <div class="question-wrap">
         <div class="question-name" id="question-name">—</div>
+        <div class="question-desc" id="question-desc"></div>
       </div>
 
       <div class="options" id="options"></div>
@@ -526,38 +575,39 @@
 (function() {
   'use strict';
 
+  // ----- Данные кислот с описаниями применения -----
   var ACIDS = [
-    { formula: 'HCl', name: 'соляная' },
-    { formula: 'HBr', name: 'бромоводородная' },
-    { formula: 'HI', name: 'иодоводородная' },
-    { formula: 'HF', name: 'плавиковая' },
-    { formula: 'H₂S', name: 'сероводородная' },
-    { formula: 'H₂SO₄', name: 'серная' },
-    { formula: 'H₂SO₃', name: 'сернистая' },
-    { formula: 'HNO₃', name: 'азотная' },
-    { formula: 'HNO₂', name: 'азотистая' },
-    { formula: 'H₃PO₄', name: 'фосфорная' },
-    { formula: 'H₂CO₃', name: 'угольная' },
-    { formula: 'H₂SiO₃', name: 'кремниевая' },
-    { formula: 'HBrO', name: 'бромноватистая' },
-    { formula: 'HBrO₂', name: 'бромистая' },
-    { formula: 'HBrO₃', name: 'бромноватая' },
-    { formula: 'HBrO₄', name: 'бромная' },
-    { formula: 'HIO', name: 'иодноватистая' },
-    { formula: 'HIO₂', name: 'иодистая' },
-    { formula: 'HIO₃', name: 'иодноватая' },
-    { formula: 'HIO₄', name: 'иодная' },
-    { formula: 'HClO', name: 'хлорноватистая' },
-    { formula: 'HClO₂', name: 'хлористая' },
-    { formula: 'HClO₃', name: 'хлорноватая' },
-    { formula: 'HClO₄', name: 'хлорная' },
-    { formula: 'HMnO₄', name: 'марганцовая' },
-    { formula: 'H₂MnO₄', name: 'марганцовистая' },
-    { formula: 'H₂CrO₄', name: 'хромовая' },
-    { formula: 'H₂Cr₂O₇', name: 'дихромовая' },
-    { formula: 'HCN', name: 'циановодородная' },
-    { formula: 'HCOOH', name: 'муравьиная' },
-    { formula: 'CH₃COOH', name: 'уксусная' }
+    { formula: 'HCl', name: 'соляная', desc: 'Применяется в металлургии, для очистки металлов, в производстве пластмасс и лекарств. Содержится в желудочном соке.' },
+    { formula: 'HBr', name: 'бромоводородная', desc: 'Используется в органическом синтезе, для получения бромидов, в фотографии и фармацевтике.' },
+    { formula: 'HI', name: 'иодоводородная', desc: 'Применяется как восстановитель в органическом синтезе, для получения иодидов и лекарственных препаратов.' },
+    { formula: 'HF', name: 'плавиковая', desc: 'Используется для травления стекла, в производстве алюминия, фторсодержащих полимеров (тефлон) и хладагентов.' },
+    { formula: 'H₂S', name: 'сероводородная', desc: 'Применяется в аналитической химии для осаждения металлов, в производстве серы и серной кислоты.' },
+    { formula: 'H₂SO₄', name: 'серная', desc: 'Одна из самых важных кислот: производство удобрений, аккумуляторов, очистка нефти, металлургия, химический синтез.' },
+    { formula: 'H₂SO₃', name: 'сернистая', desc: 'Используется как восстановитель, консервант (пищевая добавка E220), в бумажной и текстильной промышленности.' },
+    { formula: 'HNO₃', name: 'азотная', desc: 'Применяется для производства удобрений, взрывчатых веществ, в металлургии для растворения металлов, в фотографии.' },
+    { formula: 'HNO₂', name: 'азотистая', desc: 'Используется в органическом синтезе, для получения азокрасителей, как окислитель и восстановитель.' },
+    { formula: 'H₃PO₄', name: 'фосфорная', desc: 'Производство фосфорных удобрений, пищевая добавка E338 (напитки), обработка металлов, зубные пасты.' },
+    { formula: 'H₂CO₃', name: 'угольная', desc: 'Образуется в газированных напитках, участвует в природном круговороте углерода, в дыхании и фотосинтезе.' },
+    { formula: 'H₂SiO₃', name: 'кремниевая', desc: 'Используется для получения силикагеля (осушитель), в производстве стекла и керамики, как слабая кислота.' },
+    { formula: 'HBrO', name: 'бромноватистая', desc: 'Применяется как окислитель и дезинфицирующее средство, в аналитической химии.' },
+    { formula: 'HBrO₂', name: 'бромистая', desc: 'Используется в органическом синтезе и как окислитель в лабораторных исследованиях.' },
+    { formula: 'HBrO₃', name: 'бромноватая', desc: 'Применяется как сильный окислитель, в аналитической химии и органическом синтезе.' },
+    { formula: 'HBrO₄', name: 'бромная', desc: 'Очень сильная кислота-окислитель, используется в лабораторных исследованиях и органическом синтезе.' },
+    { formula: 'HIO', name: 'иодноватистая', desc: 'Применяется в аналитической химии и как окислитель в лабораторных условиях.' },
+    { formula: 'HIO₂', name: 'иодистая', desc: 'Используется в органическом синтезе и аналитической химии.' },
+    { formula: 'HIO₃', name: 'иодноватая', desc: 'Применяется в аналитической химии, как окислитель, для получения иодатов.' },
+    { formula: 'HIO₄', name: 'иодная', desc: 'Сильный окислитель, используется в органическом синтезе для окисления спиртов и углеводов.' },
+    { formula: 'HClO', name: 'хлорноватистая', desc: 'Активный компонент хлорной извести, используется для дезинфекции воды и помещений, отбеливания.' },
+    { formula: 'HClO₂', name: 'хлористая', desc: 'Применяется как окислитель, в производстве диоксида хлора для очистки воды.' },
+    { formula: 'HClO₃', name: 'хлорноватая', desc: 'Используется для получения хлоратов (гербициды, спички, пиротехника), как сильный окислитель.' },
+    { formula: 'HClO₄', name: 'хлорная', desc: 'Одна из самых сильных кислот, применяется в аналитической химии и для получения перхлоратов (ракетное топливо).' },
+    { formula: 'HMnO₄', name: 'марганцовая', desc: 'Сильный окислитель, существует только в растворе, используется в аналитической химии и органическом синтезе.' },
+    { formula: 'H₂MnO₄', name: 'марганцовистая', desc: 'Неустойчивая кислота, применяется в лабораторных исследованиях как окислитель.' },
+    { formula: 'H₂CrO₄', name: 'хромовая', desc: 'Используется для хромирования металлов, в производстве красителей, как окислитель в органическом синтезе.' },
+    { formula: 'H₂Cr₂O₇', name: 'дихромовая', desc: 'Сильный окислитель, применяется для очистки стекла, в аналитической химии и органическом синтезе.' },
+    { formula: 'HCN', name: 'циановодородная', desc: 'Используется в производстве пластмасс, пестицидов, в металлургии (цианирование золота). Очень ядовита.' },
+    { formula: 'HCOOH', name: 'муравьиная', desc: 'Применяется в кожевенной промышленности, как консервант, в производстве лекарств, растворитель.' },
+    { formula: 'CH₃COOH', name: 'уксусная', desc: 'Пищевая добавка E260 (уксус), производство пластмасс (ПЭТ), растворителей, лекарств, красителей.' }
   ];
 
   function shuffle(arr) {
@@ -575,6 +625,7 @@
   var refScreen    = document.getElementById('reference-screen');
 
   var questionName = document.getElementById('question-name');
+  var questionDesc = document.getElementById('question-desc');
   var optionsBox   = document.getElementById('options');
   var nextWrap     = document.getElementById('next-wrap');
   var quizCounter  = document.getElementById('quiz-counter');
@@ -588,6 +639,9 @@
   var slider     = document.getElementById('limit-slider');
   var limitValue = document.getElementById('limit-value');
   var quickPicks = document.querySelectorAll('.quick-pick');
+
+  var btnModeNovice = document.getElementById('mode-novice');
+  var btnModePro    = document.getElementById('mode-pro');
 
   var refTbody = document.getElementById('ref-tbody');
 
@@ -605,6 +659,7 @@
   var wrongCount   = 0;
   var askedCount   = 0;
   var maxQuestions = Infinity;
+  var mode         = 'pro';   // 'pro' | 'novice'
 
   function showScreen(id) {
     startScreen.classList.add('hidden');
@@ -622,6 +677,18 @@
       quizCounter.textContent = 'Вопрос ' + (askedCount + 1) + ' / ' + maxQuestions;
       var pct = maxQuestions > 0 ? (askedCount / maxQuestions) * 100 : 0;
       progressFill.style.width = pct + '%';
+    }
+  }
+
+  function renderQuestionText() {
+    if (mode === 'novice') {
+      questionName.textContent = target.name + ' кислота';
+      questionDesc.textContent = target.desc;
+      questionDesc.classList.add('visible');
+    } else {
+      questionName.textContent = target.name;
+      questionDesc.textContent = '';
+      questionDesc.classList.remove('visible');
     }
   }
 
@@ -652,7 +719,7 @@
     if (history.length > 10) history.shift();
 
     selected = null;
-    questionName.textContent = target.name;
+    renderQuestionText();
     nextWrap.classList.remove('visible');
 
     updateProgress();
@@ -717,6 +784,19 @@
     showScreen('quiz-screen');
     loadNext();
   }
+
+  // ----- Переключатель режима -----
+  btnModeNovice.addEventListener('click', function() {
+    mode = 'novice';
+    btnModeNovice.classList.add('active');
+    btnModePro.classList.remove('active');
+  });
+
+  btnModePro.addEventListener('click', function() {
+    mode = 'pro';
+    btnModePro.classList.add('active');
+    btnModeNovice.classList.remove('active');
+  });
 
   slider.addEventListener('input', function() {
     limitValue.textContent = slider.value;
